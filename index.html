@@ -20,53 +20,40 @@
     }
     .header { text-align:center; margin-bottom:30px; }
     .header h1 {
-      color:#2c3e50; font-size:2.5rem; margin-bottom:10px;
       background:linear-gradient(45deg,#3498db,#8e44ad);
       -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      color:#2c3e50; font-size:2.5rem; margin-bottom:10px;
     }
     .stop-name { font-size:1.2rem; color:#7f8c8d; margin-bottom:10px; }
     .last-updated { font-size:0.9rem; color:#95a5a6; }
-    .controls {
-      display:flex; gap:15px; margin-bottom:30px;
-      flex-wrap:wrap; justify-content:center;
-    }
+    .controls { display:flex; gap:15px; margin-bottom:30px; justify-content:center; }
     .refresh-btn {
-      background:linear-gradient(45deg,#27ae60,#2ecc71);
-      color:white; border:none; padding:12px 24px;
-      border-radius:25px; cursor:pointer; font-size:1rem;
-      font-weight:600; transition:all 0.3s ease;
-      box-shadow:0 4px 15px rgba(46,204,113,0.3);
+      background:linear-gradient(45deg,#27ae60,#2ecc71); color:white;
+      border:none; padding:12px 24px; border-radius:25px; cursor:pointer;
+      font-size:1rem; font-weight:600; box-shadow:0 4px 15px rgba(46,204,113,0.3);
+      transition:all 0.3s ease;
     }
-    .refresh-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(46,204,113,0.4); }
     .auto-refresh { display:flex; align-items:center; gap:8px; font-size:0.95rem; color:#2c3e50; }
-    .auto-refresh input { width:18px; height:18px; accent-color:#3498db; }
-    .bus-lines {
-      display:grid; gap:20px;
-      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-    }
+    .bus-lines { display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); }
     .bus-line {
       background:white; border-radius:15px; padding:20px;
-      box-shadow:0 8px 25px rgba(0,0,0,0.08);
-      border-left:5px solid #3498db; transition:all 0.3s ease;
+      box-shadow:0 8px 25px rgba(0,0,0,0.08); border-left:5px solid #3498db;
+      transition:all 0.3s ease;
     }
-    .bus-line:hover { transform:translateY(-5px); box-shadow:0 12px 35px rgba(0,0,0,0.12); }
     .line-header { display:flex; align-items:center; gap:15px; margin-bottom:15px; }
     .line-number {
       background:#3498db; color:white; width:50px; height:50px;
-      border-radius:50%; display:flex; align-items:center;
-      justify-content:center; font-size:1.4rem; font-weight:bold;
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem; font-weight:bold;
     }
-    .arrivals { display:flex; flex-wrap:wrap; gap:10px; }
     .direction-section {
       margin-bottom:20px; padding:15px; background:#f8f9fa;
       border-radius:10px; border-left:3px solid #bdc3c7;
     }
-    .direction-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; font-weight:600; color:#2c3e50; }
     .arrival-item {
       background:linear-gradient(45deg,#ecf0f1,#bdc3c7);
       padding:8px 16px; border-radius:20px; font-weight:600;
-      color:#2c3e50; font-size:0.95rem; transition:all 0.2s ease;
-      display:flex; flex-direction:column; gap:4px;
+      font-size:0.95rem; margin-bottom:8px;
     }
     .scheduled-time { font-size:0.85rem; color:#7f8c8d; }
     .delay-status { font-size:0.85rem; color:#e74c3c; }
@@ -74,17 +61,10 @@
     .status-indicator {
       position:fixed; top:20px; right:20px; padding:10px 20px;
       border-radius:25px; font-weight:600; font-size:0.9rem; z-index:1000;
-      transition:all 0.3s ease;
     }
     .status-online { background:linear-gradient(45deg,#27ae60,#2ecc71); color:white; }
     .status-offline { background:linear-gradient(45deg,#e74c3c,#c0392b); color:white; }
     .status-loading { background:linear-gradient(45deg,#f39c12,#e67e22); color:white; }
-    @media(max-width:768px) {
-      .container { margin:10px; padding:20px; }
-      .header h1 { font-size:2rem; }
-      .bus-lines { grid-template-columns:1fr; }
-      .controls { flex-direction:column; align-items:center; }
-    }
   </style>
 </head>
 <body>
@@ -106,57 +86,51 @@
   </div>
 
   <script>
-    function formatTime(minutes) {
-      if (minutes === 0) return "Now";
-      if (minutes === 1) return "1 min";
-      return `${minutes} min`;
+    function formatTime(m) { return m<=0 ? 'Now' : m===1 ? '1 min' : m+' min'; }
+    function formatSched(d) { return d.toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit'}); }
+    function updateStatus(s){
+      const el=document.getElementById('statusIndicator');
+      el.className='status-indicator status-'+s;
+      el.textContent={'online':'● Online','offline':'● Offline','loading':'● Loading...'}[s]||'●';
     }
-    function formatScheduledTime(date) {
-      return date.toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit'});
-    }
-    function updateStatus(status) {
-      const i = document.getElementById('statusIndicator');
-      i.className = `status-indicator status-${status}`;
-      const t = {online:'● Online',offline:'● Offline',loading:'● Loading...'}[status]||'●';
-      i.textContent = t;
-    }
-    function updateLastUpdated() {
+    function updateLastUpdated(){
       const now=new Date();
-      document.getElementById('lastUpdated').textContent =
-        `Last updated: ${now.toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+      document.getElementById('lastUpdated').textContent=
+        'Last updated: '+now.toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     }
 
-    async function fetchBusData() {
+    async function fetchBusData(){
       updateStatus('loading');
       try {
         const stopId='oilme';
         const target=`https://transport.tallinn.ee/api/v1/stops/${stopId}/arrivals`;
-        const proxy=`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`;
+        const proxy=`https://thingproxy.freeboard.io/fetch/${encodeURIComponent(target)}`;
         const res=await fetch(proxy);
         const data=await res.json();
-        console.log('🔍 Raw data:',data);
+        console.log('🔍 Raw API data:', data);
         updateStatus('online');
-        return transformTallinnData(data);
-      } catch(e) {
-        console.error(e);
+        return transformData(data);
+      } catch(err){
+        console.error(err);
         updateStatus('offline');
         return null;
       }
     }
 
-    function transformTallinnData(apiData){
+    function transformData(api){
       const out={};
-      apiData.forEach(item=>{
-        const line=item.routeShortName,dir=item.direction===0?'inbound':'outbound';
-        if(!out[line]) out[line]={inbound:{},outbound:{}};
-        const arrivals=item.nextArrivals.map(a=>{
-          const iso=a.timetableTime||a.scheduledTime||a.expectedArrivalTime;
-          const sched=iso?new Date(iso):null;
+      api.forEach(item=>{
+        const ln=item.routeShortName, dir=item.direction===0?'inbound':'outbound';
+        if(!out[ln]) out[ln]={inbound:{},outbound:{}};
+        const arrs=(item.nextArrivals||[]).map(a=>{
+          // published vs live
+          const iso=a.timetableTime||a.scheduledTime;
+          const sched=iso ? new Date(iso) : null;
           const liveMs=iso?new Date(iso).getTime():Date.now()+(a.timeToStation||0)*60000;
           const mins=Math.max(0,Math.round((liveMs-Date.now())/60000));
           return {scheduledTime:sched,actualMinutes:mins,delay:a.delayMinutes||0};
         });
-        out[line][dir]={destination:item.destinationName,arrivals};
+        out[ln][dir]={destination:item.destinationName,arrivals:arrs};
       });
       return out;
     }
@@ -169,14 +143,19 @@
       let html='';
       Object.keys(data).forEach(ln=>{
         html+=`<div class="bus-line line-${ln}">
-          <div class="line-header"><div class="line-number">${ln}</div><div class="line-info"><h3>Line ${ln}</h3></div></div>`;
+          <div class="line-header">
+            <div class="line-number">${ln}</div>
+            <div class="line-info"><h3>Line ${ln}</h3></div>
+          </div>`;
         ['inbound','outbound'].forEach(dir=>{
           const d=data[ln][dir]||{};
           html+=`<div class="direction-section">
-            <div class="direction-header"><span>${dir==='inbound'?'🏙️':'🏠'}</span><span>${d.destination||'—'}</span></div>
-            <div class="arrivals">`;
+            <div class="direction-header">
+              <span>${dir==='inbound'?'🏙️':'🏠'}</span>
+              <span>${d.destination||'—'}</span>
+            </div><div class="arrivals">`;
           (d.arrivals||[]).forEach(a=>{
-            const sched=a.scheduledTime?`📅 ${formatScheduledTime(a.scheduledTime)}`:'';
+            const sched=a.scheduledTime?`📅 ${formatSched(a.scheduledTime)}`:'';
             const dl=a.delay>0?`+${a.delay}min`:a.delay<0?`${a.delay}min`:'On time';
             html+=`<div class="arrival-item">
               <div class="arrival-time-main">${formatTime(a.actualMinutes)}</div>
@@ -191,19 +170,16 @@
       c.innerHTML=html;
     }
 
-    let autoRefreshInterval=null;
-    async function refreshData(){
-      const d=await fetchBusData();
-      renderBusLines(d);
-      updateLastUpdated();
-    }
+    let autoInt;
+    async function refreshData(){ const d=await fetchBusData(); renderBusLines(d); updateLastUpdated(); }
     function toggleAutoRefresh(){
       const cb=document.getElementById('autoRefresh');
-      if(cb.checked){autoRefreshInterval=setInterval(refreshData,30000);refreshData();}
-      else clearInterval(autoRefreshInterval);
+      if(cb.checked){ autoInt=setInterval(refreshData,30000); refreshData(); }
+      else clearInterval(autoInt);
     }
+
     document.addEventListener('DOMContentLoaded',()=>{
-      refreshData();updateStatus('online');
+      refreshData(); updateStatus('online');
     });
   </script>
 </body>
