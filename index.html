@@ -5,8 +5,30 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>🚌 Tallinn Bus Tracker – Õilme Stop</title>
   <style>
-    /* your existing CSS… */
-    /* (same as before) */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:20px; }
+    .container { max-width:800px; margin:0 auto; background:rgba(255,255,255,0.95); border-radius:20px; padding:30px; box-shadow:0 20px 40px rgba(0,0,0,0.1); backdrop-filter:blur(10px); }
+    .header { text-align:center; margin-bottom:30px; }
+    .header h1 { background:linear-gradient(45deg,#3498db,#8e44ad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; color:#2c3e50; font-size:2.5rem; margin-bottom:10px; }
+    .stop-name { font-size:1.2rem; color:#7f8c8d; margin-bottom:10px; }
+    .last-updated { font-size:0.9rem; color:#95a5a6; }
+    .controls { display:flex; gap:15px; margin-bottom:30px; justify-content:center; }
+    .refresh-btn { background:linear-gradient(45deg,#27ae60,#2ecc71); color:white; border:none; padding:12px 24px; border-radius:25px; cursor:pointer; font-size:1rem; font-weight:600; box-shadow:0 4px 15px rgba(46,204,113,0.3); transition:all 0.3s ease; }
+    .auto-refresh { display:flex; align-items:center; gap:8px; font-size:0.95rem; color:#2c3e50; }
+    .bus-lines { display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); }
+    .bus-line { background:white; border-radius:15px; padding:20px; box-shadow:0 8px 25px rgba(0,0,0,0.08); border-left:5px solid #3498db; transition:all 0.3s ease; }
+    .line-header { display:flex; align-items:center; gap:15px; margin-bottom:15px; }
+    .line-number { background:#3498db; color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:bold; }
+    .direction-section { margin-bottom:20px; padding:15px; background:#f8f9fa; border-radius:10px; border-left:3px solid #bdc3c7; }
+    .direction-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; font-weight:600; color:#2c3e50; }
+    .arrival-item { background:linear-gradient(45deg,#ecf0f1,#bdc3c7); padding:8px 16px; border-radius:20px; font-weight:600; font-size:0.95rem; margin-bottom:8px; }
+    .scheduled-time { font-size:0.85rem; color:#7f8c8d; }
+    .delay-status { font-size:0.85rem; color:#e74c3c; }
+    .no-data { text-align:center; color:#95a5a6; font-style:italic; padding:20px; }
+    .status-indicator { position:fixed; top:20px; right:20px; padding:10px 20px; border-radius:25px; font-weight:600; font-size:0.9rem; z-index:1000; }
+    .status-online { background:linear-gradient(45deg,#27ae60,#2ecc71); color:white; }
+    .status-offline { background:linear-gradient(45deg,#e74c3c,#c0392b); color:white; }
+    .status-loading { background:linear-gradient(45deg,#f39c12,#e67e22); color:white; }
   </style>
 </head>
 <body>
@@ -24,39 +46,28 @@
         Auto-refresh (30s)
       </label>
     </div>
-
-    <!-- FOR DEBUGGING: raw JSON dump -->
     <pre id="rawDump" style="max-height:200px;overflow:auto;background:#f0f0f0;padding:10px;"></pre>
-
     <div class="bus-lines" id="busLines"></div>
   </div>
 
   <script>
     function formatTime(m){return m<=0?'Now':m===1?'1 min':m+' min';}
     function formatSched(d){return d.toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit'});}
-    function updateStatus(s){
-      const i=document.getElementById('statusIndicator');
-      i.className='status-indicator status-'+s;
-      i.textContent={'online':'● Online','offline':'● Offline','loading':'● Loading...'}[s]||'●';
-    }
-    function updateLastUpdated(){
-      const n=new Date();
-      document.getElementById('lastUpdated').textContent=
-        'Last updated: '+n.toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    }
+    function updateStatus(s){const e=document.getElementById('statusIndicator');e.className='status-indicator status-'+s;e.textContent={'online':'● Online','offline':'● Offline','loading':'● Loading...'}[s]||'●';}
+    function updateLastUpdated(){const n=new Date();document.getElementById('lastUpdated').textContent='Last updated: '+n.toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}  
 
     async function fetchBusData(){
       updateStatus('loading');
       try {
         const stopId='oilme';
-        const tgt=`https://transport.tallinn.ee/api/v1/stops/${stopId}/arrivals`;
-        const proxy=`https://corsproxy.io/?${encodeURIComponent(tgt)}`;
+        const target=`https://transport.tallinn.ee/api/v1/stops/${stopId}/arrivals`;
+        const proxy=`https://corsproxy.io/?${encodeURIComponent(target)}`;
         const r=await fetch(proxy);
-        const json=await r.json();
-        document.getElementById('rawDump').textContent=JSON.stringify(json,null,2);
+        const data=await r.json();
+        document.getElementById('rawDump').textContent=JSON.stringify(data,null,2);
         updateStatus('online');
-        return transformData(json);
-      } catch(e){
+        return transformData(data);
+      } catch(e) {
         console.error(e);
         updateStatus('offline');
         return null;
@@ -66,11 +77,11 @@
     function transformData(api){
       const out={};
       api.forEach(item=>{
-        const ln=item.routeShortName,dir=item.direction===0?'inbound':'outbound';
-        out[ln]=out[ln]||{inbound:{},outbound:{}};
+        const ln=item.routeShortName;
+        const dir=item.direction===0?'inbound':'outbound';
+        if(!out[ln]) out[ln]={inbound:{},outbound:{}};
         const arrs=(item.nextArrivals||[]).map(a=>{
-          // use published timetableTime, fallback to expectedArrivalTime
-          const iso=a.timetableTime||a.expectedArrivalTime;
+          const iso=a.timetableTime||a.scheduledTime;
           const sched=iso?new Date(iso):null;
           const liveMs=iso?new Date(iso).getTime():Date.now()+(a.timeToStation||0)*60000;
           const mins=Math.max(0,Math.round((liveMs-Date.now())/60000));
@@ -83,52 +94,29 @@
 
     function renderBusLines(data){
       const c=document.getElementById('busLines');
-      if(!data||!Object.keys(data).length){
-        c.innerHTML='<div class="no-data">No bus data available</div>';return;
-      }
-      let html='';
+      if(!data||!Object.keys(data).length){c.innerHTML='<div class="no-data">No bus data available</div>';return;}
+      let h='';
       Object.keys(data).forEach(ln=>{
-        html+=`<div class="bus-line line-${ln}">
-          <div class="line-header">
-            <div class="line-number">${ln}</div>
-            <div class="line-info"><h3>Line ${ln}</h3></div>
-          </div>`;
+        h+=`<div class="bus-line line-${ln}"><div class="line-header"><div class="line-number">${ln}</div><div class="line-info"><h3>Line ${ln}</h3></div></div>`;
         ['inbound','outbound'].forEach(dir=>{
           const d=data[ln][dir]||{};
-          html+=`<div class="direction-section">
-            <div class="direction-header">
-              <span>${dir==='inbound'?'🏙️':'🏠'}</span>
-              <span>${d.destination||'—'}</span>
-            </div><div class="arrivals">`;
+          h+=`<div class="direction-section"><div class="direction-header"><span>${dir==='inbound'?'🏙️':'🏠'}</span><span>${d.destination||'—'}</span></div><div class="arrivals">`;
           (d.arrivals||[]).forEach(a=>{
             const sched=a.scheduledTime?`📅 ${formatSched(a.scheduledTime)}`:'';
             const dl=a.delay>0?`+${a.delay}min`:a.delay<0?`${a.delay}min`:'On time';
-            html+=`<div class="arrival-item">
-              <div class="arrival-time-main">${formatTime(a.actualMinutes)}</div>
-              <div class="scheduled-time">${sched}</div>
-              <div class="delay-status">${dl}</div>
-            </div>`;
+            h+=`<div class="arrival-item"><div class="arrival-time-main">${formatTime(a.actualMinutes)}</div><div class="scheduled-time">${sched}</div><div class="delay-status">${dl}</div></div>`;
           });
-          html+=`</div></div>`;
+          h+=`</div></div>`;
         });
-        html+='</div>';
+        h+='</div>';
       });
-      c.innerHTML=html;
+      c.innerHTML=h;
     }
 
-    let autoInt;
-    async function refreshData(){
-      renderBusLines(await fetchBusData());
-      updateLastUpdated();
-    }
-    function toggleAutoRefresh(){
-      const cb=document.getElementById('autoRefresh');
-      if(cb.checked){autoInt=setInterval(refreshData,30000);refreshData();}
-      else clearInterval(autoInt);
-    }
-    document.addEventListener('DOMContentLoaded',()=>{
-      refreshData();updateStatus('online');
-    });
+    let autoI;
+    async function refreshData(){renderBusLines(await fetchBusData());updateLastUpdated();}
+    function toggleAutoRefresh(){const cb=document.getElementById('autoRefresh');if(cb.checked){autoI=setInterval(refreshData,30000);refreshData();}else clearInterval(autoI);}
+    document.addEventListener('DOMContentLoaded',()=>{refreshData();updateStatus('online');});
   </script>
 </body>
 </html>
