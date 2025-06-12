@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tallinn Bus Tracker - Õilme Stop</title>
+    <title>🚌 Tallinn Bus Tracker - Õilme</title>
     <style>
         * {
             margin: 0;
@@ -12,596 +12,412 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            color: #333;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 400px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
+            padding: 20px;
+            min-height: 100vh;
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        .header h1 {
-            color: #2c3e50;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #3498db, #8e44ad);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
         }
 
         .stop-name {
-            font-size: 1.2rem;
-            color: #7f8c8d;
-            margin-bottom: 10px;
-        }
-
-        .last-updated {
-            font-size: 0.9rem;
-            color: #95a5a6;
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .refresh-btn {
-            background: linear-gradient(45deg, #27ae60, #2ecc71);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-        }
-
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
-        }
-
-        .refresh-btn:active {
-            transform: translateY(0);
-        }
-
-        .auto-refresh {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
-            color: #2c3e50;
-        }
-
-        .auto-refresh input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #3498db;
-        }
-
-        .bus-lines {
-            display: grid;
-            gap: 20px;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        }
-
-        .bus-line {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            border-left: 5px solid #3498db;
-            transition: all 0.3s ease;
-        }
-
-        .bus-line:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
-        }
-
-        .bus-line.line-3 { border-left-color: #e74c3c; }
-        .bus-line.line-16 { border-left-color: #f39c12; }
-        .bus-line.line-73 { border-left-color: #27ae60; }
-        .bus-line.line-39 { border-left-color: #9b59b6; }
-
-        .line-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            font-size: 16px;
+            color: #666;
+            text-align: center;
             margin-bottom: 15px;
         }
 
-        .line-number {
-            background: #3498db;
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            font-weight: bold;
-        }
-
-        .line-3 .line-number { background: #e74c3c; }
-        .line-16 .line-number { background: #f39c12; }
-        .line-73 .line-number { background: #27ae60; }
-        .line-39 .line-number { background: #9b59b6; }
-
-        .line-info h3 {
-            color: #2c3e50;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-
-        .line-direction {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .arrivals {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .direction-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border-left: 3px solid #bdc3c7;
-        }
-
-        .direction-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .direction-icon {
-            font-size: 1.2rem;
-        }
-
-        .direction-label {
-            font-size: 1rem;
-        }
-
-        .line-3 .direction-section { border-left-color: #e74c3c; }
-        .line-16 .direction-section { border-left-color: #f39c12; }
-        .line-73 .direction-section { border-left-color: #27ae60; }
-        .line-39 .direction-section { border-left-color: #9b59b6; }
-
-        .arrival-time {
-            background: linear-gradient(45deg, #ecf0f1, #bdc3c7);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-        }
-
-        .arrival-time.soon {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-            color: white;
-            animation: pulse 2s infinite;
-        }
-
-        .arrival-time.very-soon {
-            background: linear-gradient(45deg, #feca57, #ff9ff3);
-            color: #2c3e50;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .no-data {
+        .current-time {
             text-align: center;
-            color: #95a5a6;
-            font-style: italic;
-            padding: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
         }
 
-        .status-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            z-index: 1000;
+        .bus-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .status-online {
-            background: linear-gradient(45deg, #27ae60, #2ecc71);
+        .bus-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .route-number {
+            background: #667eea;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            padding: 8px 15px;
+            border-radius: 12px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .next-times {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .time-chip {
+            background: #f0f8ff;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .time-chip.next {
+            background: #667eea;
             color: white;
         }
 
-        .status-offline {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        .destination {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .timetable {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .time-slot {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .time-slot.current-hour {
+            background: #667eea;
             color: white;
         }
 
-        .status-loading {
-            background: linear-gradient(45deg, #f39c12, #e67e22);
+        .day-selector {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .day-btn {
+            background: #f0f0f0;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .day-btn.active {
+            background: #667eea;
             color: white;
         }
 
-        @media (max-width: 768px) {
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+
+        @media (max-width: 480px) {
             .container {
-                margin: 10px;
+                padding: 15px;
+            }
+            
+            .modal-content {
                 padding: 20px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .bus-lines {
-                grid-template-columns: 1fr;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: center;
+                margin: 10px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="status-indicator" id="statusIndicator">●</div>
-    
     <div class="container">
         <div class="header">
-            <h1>🚌 Tallinn Bus Tracker</h1>
+            <div class="title">🚌 Tallinn Bus Tracker</div>
             <div class="stop-name">📍 Õilme Bus Stop</div>
-            <div class="last-updated" id="lastUpdated">Last updated: Never</div>
+            <div class="current-time" id="currentTime"></div>
+            <button class="refresh-btn" onclick="updateTimes()">🔄 Refresh Times</button>
         </div>
 
-        <div class="controls">
-            <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Now</button>
-            <label class="auto-refresh">
-                <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
-                Auto-refresh (30s)
-            </label>
-        </div>
+        <div id="busCards"></div>
+    </div>
 
-        <div class="bus-lines" id="busLines">
-            <!-- Bus line data will be populated here -->
+    <!-- Modal for full timetable -->
+    <div id="timetableModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Route Timetable</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="day-selector">
+                <button class="day-btn active" onclick="selectDay('weekday')">Weekday</button>
+                <button class="day-btn" onclick="selectDay('saturday')">Saturday</button>
+                <button class="day-btn" onclick="selectDay('sunday')">Sunday</button>
+            </div>
+            <div id="modalContent"></div>
         </div>
     </div>
 
     <script>
-        // Demo data structure - replace with actual API calls
-        const busLines = [3, 16, 73, 39];
-        let autoRefreshInterval = null;
-
-        // Mock data generator for demonstration
-        function generateMockData() {
-            const now = new Date();
-            const mockData = {};
-            
-            busLines.forEach(lineNumber => {
-                const directions = getDirections(lineNumber);
-                
-                mockData[lineNumber] = {
-                    inbound: {
-                        destination: directions.inbound,
-                        arrivals: generateArrivals()
-                    },
-                    outbound: {
-                        destination: directions.outbound,
-                        arrivals: generateArrivals()
-                    }
-                };
-            });
-            
-            return mockData;
-        }
-
-        function generateArrivals() {
-            const arrivals = [];
-            const numArrivals = Math.floor(Math.random() * 4) + 1;
-            const now = new Date();
-            
-            for (let i = 0; i < numArrivals; i++) {
-                const minutesAway = Math.floor(Math.random() * 45) + 1;
-                const scheduledTime = new Date(now.getTime() + (minutesAway * 60000));
-                
-                // Add some randomness to show delays/early arrivals
-                const delayMinutes = Math.floor(Math.random() * 6) - 2; // -2 to +3 minutes
-                const actualMinutesAway = Math.max(0, minutesAway + delayMinutes);
-                
-                arrivals.push({
-                    scheduledTime: scheduledTime,
-                    actualMinutes: actualMinutesAway,
-                    delay: delayMinutes
-                });
+        // Timetable data for each route from Õilme stop
+        const timetables = {
+            3: {
+                destination: "Vana-Lõuna → Pelguranna",
+                weekday: ["05:30", "06:00", "06:30", "07:00", "07:15", "07:30", "07:45", "08:00", "08:15", "08:30", "08:45", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:15", "15:30", "15:45", "16:00", "16:15", "16:30", "16:45", "17:00", "17:15", "17:30", "17:45", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00"],
+                saturday: ["06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30"],
+                sunday: ["07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"]
+            },
+            16: {
+                destination: "Tallinn-Väike → Väike-Õismäe",
+                weekday: ["05:45", "06:15", "06:45", "07:00", "07:15", "07:30", "07:45", "08:00", "08:15", "08:30", "08:45", "09:00", "09:15", "09:45", "10:15", "10:45", "11:15", "11:45", "12:15", "12:45", "13:15", "13:45", "14:15", "14:30", "14:45", "15:00", "15:15", "15:30", "15:45", "16:00", "16:15", "16:30", "16:45", "17:00", "17:15", "17:30", "17:45", "18:15", "18:45", "19:15", "19:45", "20:15", "20:45", "21:15", "21:45", "22:15", "22:45"],
+                saturday: ["06:15", "06:45", "07:15", "07:45", "08:15", "08:45", "09:15", "09:45", "10:15", "10:45", "11:15", "11:45", "12:15", "12:45", "13:15", "13:45", "14:15", "14:45", "15:15", "15:45", "16:15", "16:45", "17:15", "17:45", "18:15", "18:45", "19:15", "19:45", "20:15", "20:45", "21:15", "21:45", "22:15"],
+                sunday: ["07:15", "07:45", "08:15", "08:45", "09:15", "09:45", "10:15", "10:45", "11:15", "11:45", "12:15", "12:45", "13:15", "13:45", "14:15", "14:45", "15:15", "15:45", "16:15", "16:45", "17:15", "17:45", "18:15", "18:45", "19:15", "19:45", "20:15", "20:45", "21:15"]
+            },
+            39: {
+                destination: "Vana-Lõuna → Liikuri",
+                weekday: ["06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"],
+                saturday: ["07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"],
+                sunday: ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"]
+            },
+            73: {
+                destination: "Vana-Lõuna → Kopli",
+                weekday: ["05:45", "06:15", "06:45", "07:15", "07:45", "08:15", "08:45", "09:15", "09:45", "10:15", "10:45", "11:15", "11:45", "12:15", "12:45", "13:15", "13:45", "14:15", "14:45", "15:15", "15:45", "16:15", "16:45", "17:15", "17:45", "18:15", "18:45", "19:15", "19:45", "20:15", "20:45", "21:15", "21:45", "22:15"],
+                saturday: ["06:45", "07:45", "08:45", "09:45", "10:45", "11:45", "12:45", "13:45", "14:45", "15:45", "16:45", "17:45", "18:45", "19:45", "20:45", "21:45"],
+                sunday: ["07:45", "08:45", "09:45", "10:45", "11:45", "12:45", "13:45", "14:45", "15:45", "16:45", "17:45", "18:45", "19:45", "20:45"]
             }
-            
-            return arrivals.sort((a, b) => a.actualMinutes - b.actualMinutes);
+        };
+
+        let currentDay = 'weekday';
+
+        function getCurrentTime() {
+            return new Date();
         }
 
-        function getDirections(lineNumber) {
-            const directions = {
-                3: {
-                    inbound: "→ Kopli (To City)",
-                    outbound: "→ Kadaka (From City)"
-                },
-                16: {
-                    inbound: "→ Nõmme (To City)", 
-                    outbound: "→ Ülemiste (From City)"
-                },
-                73: {
-                    inbound: "→ Mustamäe (To City)",
-                    outbound: "→ Keskus (From City)"
-                },
-                39: {
-                    inbound: "→ Õismäe (To City)",
-                    outbound: "→ Viru Keskus (From City)"
-                }
-            };
-            return directions[lineNumber] || {
-                inbound: "→ Unknown destination",
-                outbound: "→ Unknown destination"
-            };
-        }
-
-        function formatTime(minutes) {
-            if (minutes === 0) return "Now";
-            if (minutes === 1) return "1 min";
-            return `${minutes} min`;
-        }
-
-        function formatScheduledTime(date) {
-            return date.toLocaleTimeString('et-EE', { 
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-GB', { 
                 hour: '2-digit', 
-                minute: '2-digit'
+                minute: '2-digit',
+                second: '2-digit'
             });
         }
 
-        function getDelayStatus(delay) {
-            if (delay > 2) return 'delayed';
-            if (delay < -1) return 'early';
-            return 'ontime';
+        function getDayType() {
+            const now = new Date();
+            const day = now.getDay();
+            if (day === 0) return 'sunday';
+            if (day === 6) return 'saturday';
+            return 'weekday';
         }
 
-        function getDelayText(delay) {
-            if (delay > 0) return `+${delay}min`;
-            if (delay < 0) return `${delay}min`;
-            return 'On time';
+        function getNextTimes(route, count = 3) {
+            const now = getCurrentTime();
+            const currentTimeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            const dayType = getDayType();
+            const times = timetables[route][dayType];
+            
+            const upcomingTimes = times.filter(time => time > currentTimeStr);
+            return upcomingTimes.slice(0, count);
         }
 
-        function getArrivalClass(minutes, delay) {
-            let classes = [];
-            
-            if (minutes <= 2) classes.push("very-soon");
-            else if (minutes <= 5) classes.push("soon");
-            
-            if (delay !== undefined) {
-                classes.push(getDelayStatus(delay));
-            }
-            
-            return classes.join(' ');
+        function updateCurrentTime() {
+            document.getElementById('currentTime').textContent = formatTime(getCurrentTime());
         }
 
-        function updateStatus(status) {
-            const indicator = document.getElementById('statusIndicator');
-            indicator.className = `status-indicator status-${status}`;
+        function createBusCard(route) {
+            const nextTimes = getNextTimes(route);
+            const destination = timetables[route].destination;
             
-            const statusText = {
-                'online': '● Online',
-                'offline': '● Offline',
-                'loading': '● Loading...'
-            };
-            
-            indicator.textContent = statusText[status] || '●';
-        }
-
-        function renderBusLines(data) {
-            const container = document.getElementById('busLines');
-            
-            if (!data || Object.keys(data).length === 0) {
-                container.innerHTML = '<div class="no-data">No bus data available</div>';
-                return;
-            }
-
-            let html = '';
-            
-            busLines.forEach(lineNumber => {
-                const lineData = data[lineNumber];
-                
-                if (!lineData) {
-                    html += `
-                        <div class="bus-line line-${lineNumber}">
-                            <div class="line-header">
-                                <div class="line-number">${lineNumber}</div>
-                                <div class="line-info">
-                                    <h3>Line ${lineNumber}</h3>
-                                    <div class="line-direction">No data available</div>
-                                </div>
-                            </div>
-                            <div class="arrivals">
-                                <div class="no-data">No arrivals scheduled</div>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                html += `
-                    <div class="bus-line line-${lineNumber}">
-                        <div class="line-header">
-                            <div class="line-number">${lineNumber}</div>
-                            <div class="line-info">
-                                <h3>Line ${lineNumber}</h3>
-                            </div>
-                        </div>
-                `;
-
-                // Render both directions
-                ['inbound', 'outbound'].forEach(direction => {
-                    const directionData = lineData[direction];
-                    const directionIcon = direction === 'inbound' ? '🏙️' : '🏠';
-                    
-                    html += `
-                        <div class="direction-section">
-                            <div class="direction-header">
-                                <span class="direction-icon">${directionIcon}</span>
-                                <span class="direction-label">${directionData.destination}</span>
-                            </div>
-                            <div class="arrivals">
-                    `;
-
-                    if (directionData.arrivals && directionData.arrivals.length > 0) {
-                        directionData.arrivals.forEach(arrivalData => {
-                            const delayClass = getDelayStatus(arrivalData.delay);
-                            const arrivalClass = getArrivalClass(arrivalData.actualMinutes, arrivalData.delay);
-                            
-                            html += `
-                                <div class="arrival-item ${arrivalClass}">
-                                    <div class="arrival-time-main">
-                                        ${formatTime(arrivalData.actualMinutes)}
-                                    </div>
-                                    <div class="arrival-details">
-                                        <div class="scheduled-time">📅 ${formatScheduledTime(arrivalData.scheduledTime)}</div>
-                                        <div class="delay-status ${delayClass}">
-                                            ${getDelayText(arrivalData.delay)}
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        html += '<div class="no-data">No arrivals scheduled</div>';
-                    }
-
-                    html += `
-                            </div>
-                        </div>
-                    `;
-                });
-
-                html += `
+            return `
+                <div class="bus-card" onclick="openModal(${route})">
+                    <div class="route-header">
+                        <div class="route-number">${route}</div>
                     </div>
-                `;
-            });
-
-            container.innerHTML = html;
+                    <div class="destination">${destination}</div>
+                    <div class="next-times">
+                        ${nextTimes.map((time, index) => 
+                            `<div class="time-chip ${index === 0 ? 'next' : ''}">${time}</div>`
+                        ).join('')}
+                        ${nextTimes.length === 0 ? '<div class="time-chip">No more buses today</div>' : ''}
+                    </div>
+                </div>
+            `;
         }
 
-        function updateLastUpdated() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('et-EE', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
-            });
-            document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
-        }
-
-        // Function to fetch real data - replace with actual API call
-        async function fetchBusData() {
-            updateStatus('loading');
+        function updateTimes() {
+            const busCards = document.getElementById('busCards');
+            const routes = [3, 16, 39, 73];
             
-            try {
-                // Simulate API delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Replace this with actual API call:
-                // const response = await fetch('https://transport.tallinn.ee/api/v1/stops/oilme/arrivals');
-                // const data = await response.json();
-                
-                // For demo purposes, use mock data
-                const data = generateMockData();
-                
-                updateStatus('online');
-                return data;
-                
-            } catch (error) {
-                console.error('Error fetching bus data:', error);
-                updateStatus('offline');
-                return null;
-            }
+            busCards.innerHTML = routes.map(route => createBusCard(route)).join('');
         }
 
-        async function refreshData() {
-            const data = await fetchBusData();
-            renderBusLines(data);
-            updateLastUpdated();
-        }
-
-        function toggleAutoRefresh() {
-            const checkbox = document.getElementById('autoRefresh');
+        function openModal(route) {
+            const modal = document.getElementById('timetableModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
             
-            if (checkbox.checked) {
-                // Start auto-refresh every 30 seconds
-                autoRefreshInterval = setInterval(refreshData, 30000);
-                refreshData(); // Refresh immediately
-            } else {
-                // Stop auto-refresh
-                if (autoRefreshInterval) {
-                    clearInterval(autoRefreshInterval);
-                    autoRefreshInterval = null;
-                }
+            modalTitle.textContent = `Route ${route} - ${timetables[route].destination}`;
+            
+            displayTimetable(route, currentDay);
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('timetableModal').style.display = 'none';
+        }
+
+        function selectDay(day) {
+            currentDay = day;
+            document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Get the current route from modal title
+            const modalTitle = document.getElementById('modalTitle').textContent;
+            const route = parseInt(modalTitle.match(/Route (\d+)/)[1]);
+            displayTimetable(route, day);
+        }
+
+        function displayTimetable(route, day) {
+            const modalContent = document.getElementById('modalContent');
+            const times = timetables[route][day];
+            const now = getCurrentTime();
+            const currentHour = now.getHours();
+            
+            modalContent.innerHTML = `
+                <div class="timetable">
+                    ${times.map(time => {
+                        const hour = parseInt(time.split(':')[0]);
+                        const isCurrentHour = hour === currentHour;
+                        return `<div class="time-slot ${isCurrentHour ? 'current-hour' : ''}">${time}</div>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('timetableModal');
+            if (event.target === modal) {
+                closeModal();
             }
         }
 
         // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            refreshData();
-            updateStatus('online');
-        });
+        function init() {
+            updateCurrentTime();
+            updateTimes();
+            
+            // Update time every second
+            setInterval(updateCurrentTime, 1000);
+            
+            // Update bus times every minute
+            setInterval(updateTimes, 60000);
+        }
 
-        // API Integration Guide (for your reference):
-        /*
-        To integrate with the actual Tallinn transport API, you'll need to:
-        
-        1. Find the correct API endpoints for Tallinn public transport
-        2. Get the stop ID for "Õilme" stop
-        3. Replace the fetchBusData function with actual API calls
-        4. Handle CORS if needed (might require a backend proxy)
-        
-        Example API structure might look like:
-        - GET /api/v1/stops/{stopId}/arrivals
-        - GET /api/v1/routes/{routeId}/schedule
-        
-        You may need to:
-        - Register for API access
-        - Handle authentication if required
-        - Set up a backend proxy if CORS is an issue
-        - Parse the real data format
-        */
+        // Start the app when page loads
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
